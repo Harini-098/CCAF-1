@@ -2,7 +2,7 @@
 
 This project follows the standards below.
 
-<!-- @import .claude/standards/testing.md -->
+@.claude/standards/testing.md
 
 ## Language
 
