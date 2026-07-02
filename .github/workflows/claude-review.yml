@@ -21,3 +21,12 @@ jobs:
     
         - name: List Project Files
           run: ls -la
+
+        - name: Check API Key Exists
+          run: |
+            if [ -z "$ANTHROPIC_API_KEY" ]; then
+              echo "API key not found"
+              exit 1
+            else
+              echo "API key is available"
+            fi
