@@ -1,0 +1,23 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+    steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+
+        - name: Show Current Directory
+          run: pwd
+    
+        - name: List Project Files
+          run: ls -la
