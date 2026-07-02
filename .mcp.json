@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\harini\\Cohort\\CCAF-1"
+      ]
+  },
+    "content-server": {
+      "command": "C:\\Users\\harini\\Cohort\\CCAF-1\\venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\Users\\harini\\Cohort\\CCAF-1\\MCP_server\\server.py"
+      ]
+ 
+    }
+  }
+}
