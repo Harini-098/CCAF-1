@@ -9,24 +9,26 @@ jobs:
   review:
     runs-on: ubuntu-latest
 
-    env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-        - name: Show Current Directory
-          run: pwd
-    
-        - name: List Project Files
-          run: ls -la
-
-        - name: Check API Key Exists
-          run: |
-            if [ -z "$ANTHROPIC_API_KEY" ]; then
-              echo "API key not found"
-              exit 1
-            else
-              echo "API key is available"
-            fi
+      - name: Review PR with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            Review this pull request for security issues. Focus on:
+            - Injection flaws (SQL, command, template) and unsafe input handling
+            - Authentication / authorization mistakes
+            - Hardcoded secrets or credentials leaking into logs
+            - Sensitive data exposure and unsafe error handling
+            Post concise, actionable inline feedback on the changed lines only.
+          claude_args: "--output-format json --json-schema schemas/review-schema.json"
