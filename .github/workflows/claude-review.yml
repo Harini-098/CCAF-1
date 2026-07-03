@@ -24,6 +24,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          show_full_output: true
           prompt: |
             Review this pull request for security issues. Focus on:
             - Injection flaws (SQL, command, template) and unsafe input handling
@@ -31,5 +32,4 @@ jobs:
             - Hardcoded secrets or credentials leaking into logs
             - Sensitive data exposure and unsafe error handling
             Post concise, actionable inline feedback on the changed lines only.
-          show_full_output: true
-          claude_args: "--output-format json --json-schema schemas/review-schema.json"
+        
