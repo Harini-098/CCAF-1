@@ -18,3 +18,31 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+  
+        
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+        
+      - name: Check Runner
+        run: |
+          echo "Runner is working!"
+          node --version
+          python --version
+          claude --version
+        
+      - name: Generate review.json
+        run: |
+          claude -p "Review this pull request for security issues. Return ONLY JSON matching schemas/review-schema.json." \
+            --output-format json \
+            --json-schema schemas/review-schema.json \
+            > review.json
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        
+      - name: Read review.json
+        run: python scripts/post_review.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
