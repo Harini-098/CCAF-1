@@ -1,0 +1,30 @@
+[
+  {
+    "file": "MCP_server/server.py",
+    "line": 12,
+    "severity": "medium",
+    "finding": "API_KEY is read from the environment and logged as SET/MISSING, but it is never enforced. Every MCP tool (extract_data, analyze_content, analyze_document, summarize, verify) and especially coordinator_router are exposed with no authentication or authorization check, so any client that reaches the server can invoke them.",
+    "suggested_fix": "Require and validate API_KEY at startup (exit if missing) and gate tool execution behind an auth check, e.g. a shared decorator that compares a caller-supplied token against API_KEY using hmac.compare_digest before running any tool logic."
+  },
+  {
+    "file": "MCP_server/server.py",
+    "line": 202,
+    "severity": "medium",
+    "finding": "coordinator_router forwards raw untrusted 'request' text straight into Coordinator.handle_request, which routes on substring matching with no input validation, length limit, or type checking. Unbounded/unsanitized input flows into agent dispatch, enabling resource abuse and unexpected routing.",
+    "suggested_fix": "Validate 'request' before routing: reject empty/non-string input, enforce a max length, and return a structured error ({isError, errorCategory: 'validation', ...}) consistent with the other tools instead of passing arbitrary text through."
+  },
+  {
+    "file": "MCP_server/server.py",
+    "line": 62,
+    "severity": "low",
+    "finding": "extract_data returns hardcoded personal data (name 'Harini' and real-format email 'harini@gmail.com') for any non-empty input. This leaks static PII-shaped values and misrepresents extraction results regardless of the actual text.",
+    "suggested_fix": "Perform real extraction on the input, or return an empty/placeholder result set; never embed real-looking personal identifiers as canned tool output."
+  },
+  {
+    "file": "Customer_Support_Agentt/customer_agents.py",
+    "line": 202,
+    "severity": "medium",
+    "finding": "process_refund is executed directly from the model's tool selection with no eligibility gate or amount check. A prompt-injected or mistaken tool call can initiate a refund for any order_id, since the function simply returns 'refund initiated' unconditionally (unlike subagent.py which adds refund_gate_hook).",
+    "suggested_fix": "Add a server-side guard before process_refund (e.g. the refund_gate_hook / verify_eligibility pattern from subagent.py) so refund amount and eligibility are enforced in code, not left to model discretion."
+  }
+]
