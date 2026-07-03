@@ -1,0 +1,73 @@
+name: Manual Claude PR Review
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Claude CLI
+        run: |
+          # Configure npm to install global packages into a user directory instead of root
+          mkdir -p ~/.npm-global
+          npm config set prefix '~/.npm-global'
+          
+          # Add the new global bin directory to the GitHub path for subsequent steps
+          echo "$HOME/.npm-global/bin" >> $GITHUB_PATH
+          
+          # Install the official Claude Code CLI package globally
+          npm install -g @anthropic-ai/claude-code@latest
+
+      - name: Verify Claude Installation
+        run: |
+          node --version
+          python --version
+          claude --version
+
+      - name: Generate review.json
+        run: |
+          # Read the schema file content into a shell variable
+          SCHEMA_CONTENT=$(cat schemas/review-schema.json)
+          
+          # Pass the raw JSON string directly into the command line flag
+          claude -p "Review this pull request for security issues. Return ONLY JSON matching schemas/review-schema.json." \
+            --output-format json \
+            --json-schema "$SCHEMA_CONTENT" \
+            > review.json
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Verify review.json
+        run: |
+          echo "===== Files ====="
+          ls -la
+
+          echo ""
+          echo "===== review.json ====="
+          cat review.json
+      - name: Install Python dependencies
+        run: pip install requests
+
+        
+      - name: Post review comments
+        run: python scripts/post_review.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
