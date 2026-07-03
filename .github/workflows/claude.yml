@@ -1,23 +1,26 @@
 name: Claude Code Action
 on:
   pull_request:
-    types: [opened, synchronize]
-  issue_comment:
-    types: [created]
+    types: [opened, synchronize, reopened]
 
 jobs:
   claude-response:
     runs-on: ubuntu-latest
+    # ADD THESE EXPLICIT PERMISSIONS:
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
       issues: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Gives Claude full git history context
 
       - name: Run Claude Automation
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Tells Claude to explicitly output its review findings on the PR
+          prompt: "Review this pull request. Post structural findings as review comments."
