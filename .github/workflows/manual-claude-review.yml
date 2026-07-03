@@ -1,30 +1,48 @@
-name: Run Claude CLI
-# WRONG: on: [push] (Will throw Unsupported event type error)
+name: Manual Claude PR Review
 
-# CORRECT: Use pull requests or comments
 on:
   pull_request:
-    types: [opened, synchronize]
-  issue_comment:
-    types: [created]
+    branches:
+      - main
 
 jobs:
-  claude-cli-job:
-    # Ensure Claude can read/write to the PR or Issue
-    permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-      id-token: write  # Required for OIDC authentication if used
-    
+  review:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
 
-      - name: Run Claude Code Action
-        uses: anthropics/claude-code-action@v1
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # The prompt is optional if you trigger via @claude comments
-          prompt: "Review the recent changes in this pull request." 
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 👇 MISSING STEP
+      # Install Claude CLI here
+
+      - name: Verify Claude Installation
+        run: |
+          node --version
+          python --version
+          claude --version
+
+      - name: Generate review.json
+        run: |
+          claude -p "Review this pull request for security issues. Return ONLY JSON matching schemas/review-schema.json." \
+            --output-format json \
+            --json-schema schemas/review-schema.json \
+            > review.json
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Post review comments
+        run: python scripts/post_review.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
