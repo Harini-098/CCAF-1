@@ -31,4 +31,5 @@ jobs:
             - Hardcoded secrets or credentials leaking into logs
             - Sensitive data exposure and unsafe error handling
             Post concise, actionable inline feedback on the changed lines only.
+          show_full_output: true
           claude_args: "--output-format json --json-schema schemas/review-schema.json"
