@@ -2,25 +2,28 @@ name: Claude Code Action
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
 
 jobs:
   claude-response:
     runs-on: ubuntu-latest
-    # ADD THESE EXPLICIT PERMISSIONS:
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
       issues: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Gives Claude full git history context
+          fetch-depth: 0
 
       - name: Run Claude Automation
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Tells Claude to explicitly output its review findings on the PR
-          prompt: "Review this pull request. Post structural findings as review comments."
+          # ADD THIS FLAG TO BYPASS SILENT FILTERING:
+          classify_inline_comments: "false" 
+          # ADD AN EXPLICIT DIRECTIVE COMMAND:
+          claude_args: "--review" 
