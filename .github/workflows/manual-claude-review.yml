@@ -44,9 +44,13 @@ jobs:
 
       - name: Generate review.json
         run: |
+          # Read the schema file content into a shell variable
+          SCHEMA_CONTENT=$(cat schemas/review-schema.json)
+          
+          # Pass the raw JSON string directly into the command line flag
           claude -p "Review this pull request for security issues. Return ONLY JSON matching schemas/review-schema.json." \
             --output-format json \
-            --json-schema schemas/review-schema.json \
+            --json-schema "$SCHEMA_CONTENT" \
             > review.json
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
