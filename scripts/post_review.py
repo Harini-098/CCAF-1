@@ -1,27 +1,53 @@
 import json
+import os
 from pathlib import Path
+import requests
 
-review_file = Path("review.json")
-
-with open(review_file, "r", encoding="utf-8") as f:
+# Read review.json
+with open("review.json", "r", encoding="utf-8") as f:
     response = json.load(f)
 
-# Claude stores the actual JSON inside the "result" field
-result = response["result"]
+findings = json.loads(response["result"])
 
-# Convert the JSON string into a Python object
-findings = json.loads(result)
-
-# If Claude returned only one finding, convert it to a list
 if isinstance(findings, dict):
     findings = [findings]
 
-print(f"Found {len(findings)} finding(s)\n")
+# GitHub info
+repo = os.environ["GITHUB_REPOSITORY"]
+token = os.environ["GITHUB_TOKEN"]
+
+with open(os.environ["GITHUB_EVENT_PATH"], "r", encoding="utf-8") as f:
+    event = json.load(f)
+
+owner, repo_name = repo.split("/")
+pr_number = event["pull_request"]["number"]
+commit_sha = event["pull_request"]["head"]["sha"]
+
+headers = {
+    "Authorization": f"Bearer {token}",
+    "Accept": "application/vnd.github+json"
+}
 
 for finding in findings:
-    print(f"File      : {finding['file']}")
-    print(f"Line      : {finding['line']}")
-    print(f"Severity  : {finding['severity']}")
-    print(f"Finding   : {finding['finding']}")
-    print(f"Suggested : {finding['suggested_fix']}")
-    print("-" * 60)
+
+    payload = {
+        "body": f"""### {finding['severity'].upper()}
+
+**Finding**
+{finding['finding']}
+
+**Suggested Fix**
+{finding['suggested_fix']}
+""",
+        "commit_id": commit_sha,
+        "path": finding["file"],
+        "line": finding["line"],
+        "side": "RIGHT"
+    }
+
+    url = f"https://api.github.com/repos/{owner}/{repo_name}/pulls/{pr_number}/comments"
+
+    response = requests.post(url, headers=headers, json=payload)
+
+    print(response.status_code)
+    print(response.text)

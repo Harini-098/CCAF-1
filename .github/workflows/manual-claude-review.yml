@@ -59,11 +59,14 @@ jobs:
         run: |
           echo "===== Files ====="
           ls -la
-              
+
           echo ""
           echo "===== review.json ====="
           cat review.json
+      - name: Install Python dependencies
+        run: pip install requests
 
+        
       - name: Post review comments
         run: python scripts/post_review.py
         env:
