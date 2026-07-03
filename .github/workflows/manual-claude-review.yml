@@ -1,8 +1,22 @@
 name: Run Claude CLI
-on: [push]
+# WRONG: on: [push] (Will throw Unsupported event type error)
+
+# CORRECT: Use pull requests or comments
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
 
 jobs:
   claude-cli-job:
+    # Ensure Claude can read/write to the PR or Issue
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write  # Required for OIDC authentication if used
+    
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -11,7 +25,6 @@ jobs:
       - name: Run Claude Code Action
         uses: anthropics/claude-code-action@v1
         with:
-          # Your Anthropic API Key stored in GitHub Secrets
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # The prompt or task you want the CLI to execute
-          prompt: "Review the recent changes in this repository and check for bugs."
+          # The prompt is optional if you trigger via @claude comments
+          prompt: "Review the recent changes in this pull request." 
